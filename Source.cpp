@@ -7,7 +7,7 @@
 #include <cassert>
 #include <algorithm>
 #include <vector>
-
+#include <chrono>
 #include <Windows.h>
 
 using namespace std;
@@ -17,7 +17,8 @@ float Dist(int x1, int y1, int x2, int y2) {
 }
 
 void PathFinder(Node grid[50][50], Node Start, Node End, sf::RenderWindow &window) {
-    
+    auto start = chrono::high_resolution_clock::now();
+
     vector<Node> Open;
     vector<Node> Closed;
 
@@ -70,42 +71,64 @@ void PathFinder(Node grid[50][50], Node Start, Node End, sf::RenderWindow &windo
                 n = grid[n.y][n.x].CameFrom;
             }
 
+
+            auto stop = chrono::high_resolution_clock::now();
+            auto duration = chrono::duration_cast<chrono::milliseconds>(stop - start);
+
+            cout << duration.count() << " ms" << endl;
+
             return;
+        }
+
+
+        Node* cur;
+
+        if (row + 1 < 50) {
+            cur = &grid[row + 1][col];
+            if (cur->GetType() != 4 && cur->GetType() != 1 && cur->GetType() != 5) {
+
+                cur->Score = Dist(col, row + 1, SPos.x, SPos.y) + Dist(col, row + 1, EPos.x, EPos.y);
+                cur->SetOpen();
+                cur->CameFrom = pos;
+                Open.push_back(*cur);
+
+            }
         }
         
 
-        if (grid[row + 1][col].GetType() != 4 && grid[row + 1][col].GetType() != 1 && grid[row + 1][col].GetType() != 5 &&row + 1 < 50) {
-            
-            grid[row + 1][col].Score = Dist(col, row + 1, SPos.x, SPos.y) + Dist(col, row + 1, EPos.x, EPos.y);
-            grid[row + 1][col].SetOpen();
-            grid[row + 1][col].CameFrom = pos;
-            Open.push_back(grid[row + 1][col]);
+        if (row - 1 >= 0) {
+            cur = &grid[row - 1][col];
+            if (cur->GetType() != 4 && cur->GetType() != 1 && cur->GetType() != 5) {
 
-        }
-        if (grid[row - 1][col].GetType() != 4 && grid[row - 1][col].GetType() != 1 && grid[row - 1][col].GetType() != 5 && row - 1 >= 0) {
-            
-            grid[row - 1][col].Score = Dist(col, row - 1, SPos.x, SPos.y) + Dist(col, row - 1, EPos.x, EPos.y);
-            grid[row - 1][col].SetOpen();
-            grid[row - 1][col].CameFrom = pos;
-            Open.push_back(grid[row - 1][col]);                
+                cur->Score = Dist(col, row - 1, SPos.x, SPos.y) + Dist(col, row - 1, EPos.x, EPos.y);
+                cur->SetOpen();
+                cur->CameFrom = pos;
+                Open.push_back(*cur);
+            }
         }
 
-        if (grid[row ][col+1].GetType() != 4 && grid[row][col + 1].GetType() != 1 && grid[row][col + 1].GetType() != 5 &&  col + 1 < 50) {
-            
-            grid[row][col+1].Score = Dist(col + 1, row, SPos.x, SPos.y) + Dist(col + 1, row, EPos.x, EPos.y);
-            grid[row][col + 1].SetOpen();
-            grid[row][col+1].CameFrom = pos;
-            Open.push_back(grid[row][col + 1]);
-            
-                
+        if (col + 1 < 50) {
+            cur = &grid[row][col + 1];
+            if (cur->GetType() != 4 && cur->GetType() != 1 && cur->GetType() != 5) {
+
+                cur->Score = Dist(col + 1, row, SPos.x, SPos.y) + Dist(col + 1, row, EPos.x, EPos.y);
+                cur->SetOpen();
+                cur->CameFrom = pos;
+                Open.push_back(*cur);
+            }
         }
-        if (grid[row][col - 1].GetType() != 4 && grid[row][col - 1].GetType() != 1 && grid[row][col - 1].GetType() != 5 &&  col - 1 >= 0) {
-            
-            grid[row][col - 1].Score = Dist(col - 1, row, SPos.x, SPos.y) + Dist(col - 1, row, EPos.x, EPos.y);
-            grid[row][col - 1].SetOpen();
-            grid[row][col-1].CameFrom = pos;
-            Open.push_back(grid[row][col - 1]);
+
+        if (col - 1 >= 0) {
+            cur = &grid[row][col - 1];
+            if (cur->GetType() != 4 && cur->GetType() != 1 && cur->GetType() != 5) {
+
+                cur->Score = Dist(col - 1, row, SPos.x, SPos.y) + Dist(col - 1, row, EPos.x, EPos.y);
+                cur->SetOpen();
+                cur->CameFrom = pos;
+                Open.push_back(*cur);
+            }
         }
+
 
 
 
@@ -122,6 +145,11 @@ void PathFinder(Node grid[50][50], Node Start, Node End, sf::RenderWindow &windo
     }
 
     std::cout << "end" << endl;
+
+    auto stop = chrono::high_resolution_clock::now();
+    auto duration = chrono::duration_cast<chrono::milliseconds>(stop - start);
+
+    cout << duration.count() << " ms" << endl;
 }
 
 
@@ -139,7 +167,7 @@ int main()
     Node grid[50][50];
     for (int i = 0; i < 50; i++) {
         for (int j = 0; j < 50; j++) {
-            grid[i][j] = Node(i,j,16,50);
+            grid[i][j] = Node(i,j,16);
         }
     }
 
@@ -165,7 +193,10 @@ int main()
             int row = pos.x / 16;
             int col = pos.y / 16;
 
-            grid[row][col].SetWall();
+            if (row >= 0 && row < 50 && col >= 0 && col < 50) {
+                grid[row][col].SetWall();
+            }
+            
         }
         else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
         {
@@ -183,7 +214,7 @@ int main()
                 }
                 else if (!EndNode) {
                     grid[row][col].SetEnd();
-                    End = Node(row, col, 16, 50);
+                    End = Node(row, col, 16);
                     EndNode = true;
                 }
                 else if(!started){
@@ -200,7 +231,7 @@ int main()
                     EndNode = false;
                     for (int i = 0; i < 50; i++) {
                         for (int j = 0; j < 50; j++) {
-                            grid[i][j] = Node(i, j, 16, 50);
+                            grid[i][j] = Node(i, j, 16);
                         }
                     }
                 }
